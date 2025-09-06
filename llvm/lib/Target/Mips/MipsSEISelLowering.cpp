@@ -182,6 +182,7 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
   else if (Subtarget.isGP64bit())
     setOperationAction(ISD::MUL,              MVT::i64, Custom);
 
+  // TODO: HACK HERE. PROBABLY NOT NEEDED ANYMORE?
   if (Subtarget.isGP64bit()) {
     setOperationAction(ISD::SMUL_LOHI,        MVT::i64, Custom);
     setOperationAction(ISD::UMUL_LOHI,        MVT::i64, Custom);
@@ -292,6 +293,30 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
     setOperationAction(ISD::SELECT, MVT::i64, Legal);
     setOperationAction(ISD::SELECT_CC, MVT::i64, Expand);
   }
+
+  // TODO: THIS IS WHERE WE NEED TO HACK THIS PIECE OF SHIT!!!
+  setOperationAction(ISD::MUL, MVT::i64, LibCall);
+  setOperationAction(ISD::SDIV, MVT::i64, LibCall);
+  setOperationAction(ISD::UDIV, MVT::i64, LibCall);
+  setOperationAction(ISD::SREM, MVT::i64, LibCall);
+  setOperationAction(ISD::UREM, MVT::i64, LibCall);
+  setOperationAction(ISD::SDIVREM, MVT::i64, LibCall);
+  setOperationAction(ISD::UDIVREM, MVT::i64, LibCall);
+  setOperationAction(ISD::SMUL_LOHI, MVT::i64, LibCall);
+  setOperationAction(ISD::UMUL_LOHI, MVT::i64, LibCall);
+  setOperationAction(ISD::MULHS, MVT::i64, LibCall);
+  setOperationAction(ISD::MULHU, MVT::i64, LibCall);
+
+  // setOperationAction(ISD::FABS, MVT::f64, LibCall);
+  // setOperationAction(ISD::FADD, MVT::f64, LibCall);
+  // setOperationAction(ISD::FSUB, MVT::f64, LibCall);
+  // setOperationAction(ISD::FMUL, MVT::f64, LibCall);
+  // setOperationAction(ISD::FDIV, MVT::f64, LibCall);
+  // setOperationAction(ISD::FREM, MVT::f64, LibCall);
+  // setOperationAction(ISD::FP_ROUND, MVT::f64, LibCall);
+  // setOperationAction(ISD::BITCAST, MVT::f64, LibCall);
+  // setOperationAction(ISD::LOAD, MVT::f64, LibCall);
+  // setOperationAction(ISD::STORE, MVT::f64, LibCall);
 
   computeRegisterProperties(Subtarget.getRegisterInfo());
 }
@@ -456,8 +481,7 @@ SDValue MipsSETargetLowering::LowerOperation(SDValue Op,
   case ISD::MULHU:     return lowerMulDiv(Op, MipsISD::Multu, false, true, DAG);
   case ISD::MUL:       return lowerMulDiv(Op, MipsISD::Mult, true, false, DAG);
   case ISD::SDIVREM:   return lowerMulDiv(Op, MipsISD::DivRem, true, true, DAG);
-  case ISD::UDIVREM:   return lowerMulDiv(Op, MipsISD::DivRemU, true, true,
-                                          DAG);
+  case ISD::UDIVREM:   return lowerMulDiv(Op, MipsISD::DivRemU, true, true, DAG);
   case ISD::INTRINSIC_WO_CHAIN: return lowerINTRINSIC_WO_CHAIN(Op, DAG);
   case ISD::INTRINSIC_W_CHAIN:  return lowerINTRINSIC_W_CHAIN(Op, DAG);
   case ISD::INTRINSIC_VOID:     return lowerINTRINSIC_VOID(Op, DAG);
