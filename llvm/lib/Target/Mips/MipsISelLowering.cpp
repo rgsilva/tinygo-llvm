@@ -517,7 +517,10 @@ MipsTargetLowering::MipsTargetLowering(const MipsTargetMachine &TM,
   setTargetDAGCombine({ISD::SDIVREM, ISD::UDIVREM, ISD::SELECT, ISD::AND,
                        ISD::OR, ISD::ADD, ISD::SUB, ISD::AssertZext, ISD::SHL});
 
-  if (Subtarget.isGP64bit())
+  if (Subtarget.hasR5900())
+    // The R5900 has no LL/SC, so atomics are expanded to __atomic_* libcalls.
+    setMaxAtomicSizeInBitsSupported(0);
+  else if (Subtarget.isGP64bit())
     setMaxAtomicSizeInBitsSupported(64);
   else
     setMaxAtomicSizeInBitsSupported(32);
