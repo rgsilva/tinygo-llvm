@@ -184,6 +184,16 @@ def HasMips4_32  :    Predicate<"Subtarget->hasMips4_32()">,
                       AssemblerPredicate<(all_of FeatureMips4_32)>;
 def NotMips4_32  :    Predicate<"!Subtarget->hasMips4_32()">,
                       AssemblerPredicate<(all_of (not FeatureMips4_32))>;
+def HasR5900     :    Predicate<"Subtarget->hasR5900()">,
+                      AssemblerPredicate<(all_of FeatureR5900)>;
+def NotR5900     :    Predicate<"!Subtarget->hasR5900()">,
+                      AssemblerPredicate<(all_of (not FeatureR5900))>;
+// GPR-to-GPR conditional moves (MOVN/MOVZ): part of the MIPS-IV subset in
+// MIPS32, and the one piece of MIPS-IV the R5900 implements.
+def HasGPRCondMov :   Predicate<"Subtarget->hasMips4_32() || Subtarget->hasR5900()">,
+                      AssemblerPredicate<(any_of FeatureMips4_32, FeatureR5900)>;
+def NotGPRCondMov :   Predicate<"!Subtarget->hasMips4_32() && !Subtarget->hasR5900()">,
+                      AssemblerPredicate<(all_of (not FeatureMips4_32), (not FeatureR5900))>;
 def HasMips4_32r2 :   Predicate<"Subtarget->hasMips4_32r2()">,
                       AssemblerPredicate<(all_of FeatureMips4_32r2)>;
 def HasMips5_32r2 :   Predicate<"Subtarget->hasMips5_32r2()">,
@@ -308,6 +318,10 @@ class ISA_MIPS1_NOT_4_32 {
   list<Predicate> InsnPredicates = [NotMips4_32];
   list<Predicate> EncodingPredicates = [HasStdEnc];
 }
+class ISA_MIPS1_NOT_GPR_CONDMOV {
+  list<Predicate> InsnPredicates = [NotGPRCondMov];
+  list<Predicate> EncodingPredicates = [HasStdEnc];
+}
 class ISA_MIPS1_NOT_32R6_64R6 {
   list<Predicate> InsnPredicates = [NotMips32r6, NotMips64r6];
   list<Predicate> EncodingPredicates = [HasStdEnc];
@@ -422,6 +436,12 @@ class INSN_MIPS4_32 {
 // MIPS32r6 and MIPS64r6.
 class INSN_MIPS4_32_NOT_32R6_64R6 {
   list<Predicate> InsnPredicates = [HasMips4_32, NotMips32r6, NotMips64r6];
+  list<Predicate> EncodingPredicates = [HasStdEnc];
+}
+
+// GPR conditional moves: as above, but also available on the R5900.
+class INSN_GPR_CONDMOV_NOT_32R6_64R6 {
+  list<Predicate> InsnPredicates = [HasGPRCondMov, NotMips32r6, NotMips64r6];
   list<Predicate> EncodingPredicates = [HasStdEnc];
 }
 

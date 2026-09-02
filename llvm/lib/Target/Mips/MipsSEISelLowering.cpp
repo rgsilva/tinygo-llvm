@@ -272,7 +272,7 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
     setOperationAction(ISD::BITCAST, MVT::i64, Custom);
   }
 
-  if (NoDPLoadStore) {
+  if (NoDPLoadStore || Subtarget.hasR5900()) {
     setOperationAction(ISD::LOAD, MVT::f64, Custom);
     setOperationAction(ISD::STORE, MVT::f64, Custom);
   }
@@ -355,6 +355,15 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
     setOperationAction(ISD::SETCC, MVT::i64, Legal);
     setOperationAction(ISD::SELECT, MVT::i64, Legal);
     setOperationAction(ISD::SELECT_CC, MVT::i64, Expand);
+  }
+
+  if (Subtarget.hasR5900()) {
+    // The R5900 has no DMULT/DMULTU/DDIV/DDIVU: 64-bit multiplication and
+    // division go through libcalls (__muldi3, __divdi3, ...).
+    for (unsigned Op : {ISD::MUL, ISD::SMUL_LOHI, ISD::UMUL_LOHI, ISD::MULHS,
+                        ISD::MULHU, ISD::SDIV, ISD::UDIV, ISD::SREM, ISD::UREM,
+                        ISD::SDIVREM, ISD::UDIVREM})
+      setOperationAction(Op, MVT::i64, LibCall);
   }
 
   computeRegisterProperties(Subtarget.getRegisterInfo());
@@ -1237,7 +1246,7 @@ getOpndList(SmallVectorImpl<SDValue> &Ops,
 SDValue MipsSETargetLowering::lowerLOAD(SDValue Op, SelectionDAG &DAG) const {
   LoadSDNode &Nd = *cast<LoadSDNode>(Op);
 
-  if (Nd.getMemoryVT() != MVT::f64 || !NoDPLoadStore)
+  if (Nd.getMemoryVT() != MVT::f64 || !(NoDPLoadStore || Subtarget.hasR5900()))
     return MipsTargetLowering::lowerLOAD(Op, DAG);
 
   // Replace a double precision load with two i32 loads and a buildpair64.
@@ -1266,7 +1275,7 @@ SDValue MipsSETargetLowering::lowerLOAD(SDValue Op, SelectionDAG &DAG) const {
 SDValue MipsSETargetLowering::lowerSTORE(SDValue Op, SelectionDAG &DAG) const {
   StoreSDNode &Nd = *cast<StoreSDNode>(Op);
 
-  if (Nd.getMemoryVT() != MVT::f64 || !NoDPLoadStore)
+  if (Nd.getMemoryVT() != MVT::f64 || !(NoDPLoadStore || Subtarget.hasR5900()))
     return MipsTargetLowering::lowerSTORE(Op, DAG);
 
   // Replace a double precision store with two extractelement64s and i32 stores.

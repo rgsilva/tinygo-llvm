@@ -186,6 +186,16 @@ def FeatureCnMipsP : SubtargetFeature<"cnmipsp", "HasCnMipsP",
                                       "true", "Octeon+ cnMIPS Support",
                                       [FeatureCnMips]>;
 
+// The Sony/Toshiba R5900 (PlayStation 2 "Emotion Engine") is a MIPS-III
+// core with a few omissions: no DMULT/DMULTU/DDIV/DDIVU, no LL/SC and no
+// LDC1/SDC1. Of the MIPS-IV additions it only has the GPR conditional moves
+// (MOVN/MOVZ), not the FPU-related ones. The FPU only implements single
+// precision, which is selected separately with FeatureSingleFloat (as with
+// GCC's -march=r5900).
+def FeatureR5900 : SubtargetFeature<"r5900", "HasR5900", "true",
+                                    "Sony/Toshiba R5900 (PlayStation 2) support",
+                                    [FeatureMips3]>;
+
 def FeatureUseTCCInDIV : SubtargetFeature<
                                "use-tcc-in-div",
                                "UseTCCInDIV", "false",
@@ -295,6 +305,7 @@ def : Proc<"mips64r5", [FeatureMips64r5]>;
 def : Proc<"mips64r6", [FeatureMips64r6]>;
 def : Proc<"octeon", [FeatureMips64r2, FeatureCnMips]>;
 def : Proc<"octeon+", [FeatureMips64r2, FeatureCnMips, FeatureCnMipsP]>;
+def : Proc<"r5900", [FeatureR5900]>;
 def : ProcessorModel<"p5600", MipsP5600Model, [ImplP5600]>;
 def : ProcessorModel<"i6400", MipsI6400Model, [ImplI6400]>;
 def : ProcessorModel<"i6500", MipsI6400Model, [ImplI6500]>;
