@@ -88,3 +88,57 @@ define i32 @select_fcmp(float %x, float %y, i32 %a, i32 %b) {
   %r = select i1 %t, i32 %a, i32 %b
   ret i32 %r
 }
+
+; The FPU only has C.F/C.EQ/C.LT/C.LE and no NaN: unordered compares use the
+; ordered instruction.
+define i1 @fcmp_ult(float %a, float %b) {
+; CHECK-LABEL: fcmp_ult:
+; CHECK: c.olt.s
+; CHECK-NOT: c.ult.s
+; MIPS3-LABEL: fcmp_ult:
+; MIPS3: c.ult.s
+  %r = fcmp ult float %a, %b
+  ret i1 %r
+}
+
+define i1 @fcmp_ule(float %a, float %b) {
+; CHECK-LABEL: fcmp_ule:
+; CHECK: c.ole.s
+; CHECK-NOT: c.ule.s
+  %r = fcmp ule float %a, %b
+  ret i1 %r
+}
+
+define i1 @fcmp_ugt(float %a, float %b) {
+; CHECK-LABEL: fcmp_ugt:
+; CHECK: c.ole.s
+; CHECK-NOT: c.ule.s
+  %r = fcmp ugt float %a, %b
+  ret i1 %r
+}
+
+define i1 @fcmp_ueq(float %a, float %b) {
+; CHECK-LABEL: fcmp_ueq:
+; CHECK: c.eq.s
+; CHECK-NOT: c.ueq.s
+  %r = fcmp ueq float %a, %b
+  ret i1 %r
+}
+
+define i1 @fcmp_one(float %a, float %b) {
+; CHECK-LABEL: fcmp_one:
+; CHECK: c.eq.s
+; CHECK-NOT: c.ueq.s
+  %r = fcmp one float %a, %b
+  ret i1 %r
+}
+
+define i1 @fcmp_uno(float %a, float %b) {
+; CHECK-LABEL: fcmp_uno:
+; CHECK: c.f.s
+; CHECK-NOT: c.un.s
+; MIPS3-LABEL: fcmp_uno:
+; MIPS3: c.un.s
+  %r = fcmp uno float %a, %b
+  ret i1 %r
+}
