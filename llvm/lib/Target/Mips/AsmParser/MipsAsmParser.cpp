@@ -708,6 +708,9 @@ public:
   bool useSoftFloat() const {
     return getSTI().hasFeature(Mips::FeatureSoftFloat);
   }
+  bool isSingleFloat() const {
+    return getSTI().hasFeature(Mips::FeatureSingleFloat);
+  }
   bool hasMT() const {
     return getSTI().hasFeature(Mips::FeatureMT);
   }
@@ -8271,6 +8274,29 @@ bool MipsAsmParser::parseDirectiveModule() {
     // If generating ELF, don't do anything (the .MIPS.abiflags section gets
     // emitted later).
     getTargetStreamer().emitDirectiveModuleSoftFloat();
+
+    // If this is not the end of the statement, report an error.
+    if (getLexer().isNot(AsmToken::EndOfStatement)) {
+      reportParseError("unexpected token, expected end of statement");
+      return false;
+    }
+
+    return false; // parseDirectiveModule has finished successfully.
+  } else if (Option == "singlefloat" || Option == "doublefloat") {
+    if (Option == "singlefloat")
+      setModuleFeatureBits(Mips::FeatureSingleFloat, "single-float");
+    else
+      clearModuleFeatureBits(Mips::FeatureSingleFloat, "single-float");
+
+    // Synchronize the ABI Flags information with the FeatureBits information we
+    // updated above (it decides the fp_abi value of .MIPS.abiflags).
+    getTargetStreamer().updateABIInfo(*this);
+
+    // If printing assembly, echo the directive; ELF gets .MIPS.abiflags later.
+    if (Option == "singlefloat")
+      getTargetStreamer().emitDirectiveModuleSingleFloat();
+    else
+      getTargetStreamer().emitDirectiveModuleDoubleFloat();
 
     // If this is not the end of the statement, report an error.
     if (getLexer().isNot(AsmToken::EndOfStatement)) {

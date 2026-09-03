@@ -114,6 +114,8 @@ public:
   virtual void emitDirectiveModuleOddSPReg();
   virtual void emitDirectiveModuleSoftFloat();
   virtual void emitDirectiveModuleHardFloat();
+  virtual void emitDirectiveModuleSingleFloat();
+  virtual void emitDirectiveModuleDoubleFloat();
   virtual void emitDirectiveModuleMT();
   virtual void emitDirectiveSetFp(MipsABIFlagsSection::FpABIKind Value);
   virtual void emitDirectiveSetOddSPReg();
@@ -313,6 +315,8 @@ public:
   void emitDirectiveModuleOddSPReg() override;
   void emitDirectiveModuleSoftFloat() override;
   void emitDirectiveModuleHardFloat() override;
+  void emitDirectiveModuleSingleFloat() override;
+  void emitDirectiveModuleDoubleFloat() override;
   void emitDirectiveModuleMT() override;
   void emitDirectiveModuleCRC() override;
   void emitDirectiveModuleNoCRC() override;

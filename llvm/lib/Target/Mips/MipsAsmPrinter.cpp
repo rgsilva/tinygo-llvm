@@ -779,6 +779,7 @@ void MipsAsmPrinter::emitStartOfAsmFile(Module &M) {
     // accept it. We therefore emit it when it contradicts the ABI defaults
     // (-mfpxx or -mfp64) and omit it otherwise.
     if ((ABI.IsO32() && (STI.isABI_FPXX() || STI.isFP64bit())) ||
+        STI.isSingleFloat() ||
         STI.useSoftFloat())
       TS.emitDirectiveModuleFP();
 

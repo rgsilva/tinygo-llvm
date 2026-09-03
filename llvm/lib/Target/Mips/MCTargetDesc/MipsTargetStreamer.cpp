@@ -165,6 +165,8 @@ void MipsTargetStreamer::emitDirectiveModuleOddSPReg() {
 }
 void MipsTargetStreamer::emitDirectiveModuleSoftFloat() {}
 void MipsTargetStreamer::emitDirectiveModuleHardFloat() {}
+void MipsTargetStreamer::emitDirectiveModuleSingleFloat() {}
+void MipsTargetStreamer::emitDirectiveModuleDoubleFloat() {}
 void MipsTargetStreamer::emitDirectiveModuleMT() {}
 void MipsTargetStreamer::emitDirectiveModuleCRC() {}
 void MipsTargetStreamer::emitDirectiveModuleNoCRC() {}
@@ -784,6 +786,8 @@ void MipsTargetAsmStreamer::emitDirectiveModuleFP() {
   MipsABIFlagsSection::FpABIKind FpABI = ABIFlagsSection.getFpABI();
   if (FpABI == MipsABIFlagsSection::FpABIKind::SOFT)
     OS << "\t.module\tsoftfloat\n";
+  else if (FpABI == MipsABIFlagsSection::FpABIKind::SINGLE)
+    OS << "\t.module\tsinglefloat\n";
   else
     OS << "\t.module\tfp=" << ABIFlagsSection.getFpABIString(FpABI) << "\n";
 }
@@ -818,6 +822,14 @@ void MipsTargetAsmStreamer::emitDirectiveModuleSoftFloat() {
 
 void MipsTargetAsmStreamer::emitDirectiveModuleHardFloat() {
   OS << "\t.module\thardfloat\n";
+}
+
+void MipsTargetAsmStreamer::emitDirectiveModuleSingleFloat() {
+  OS << "\t.module\tsinglefloat\n";
+}
+
+void MipsTargetAsmStreamer::emitDirectiveModuleDoubleFloat() {
+  OS << "\t.module\tdoublefloat\n";
 }
 
 void MipsTargetAsmStreamer::emitDirectiveModuleMT() {
