@@ -386,19 +386,23 @@ defm D64 : C_COND_M<"d", FGR64Opnd, 17, II_C_CC_D>, ISA_MIPS1_NOT_32R6_64R6,
 // Floating Point Instructions
 //===----------------------------------------------------------------------===//
 let AdditionalPredicates = [NotInMicroMips], mayRaiseFPException = 1 in {
-  def ROUND_W_S : MMRel, StdMMR6Rel,
-                  ABSS_FT<"round.w.s", FGR32Opnd, FGR32Opnd, II_ROUND>,
-                  ABSS_FM<0xc, 16>, ISA_MIPS2;
+  // The R5900's FPU has none of ROUND/TRUNC/CEIL/FLOOR: its CVT.W.S rounds
+  // toward zero (see the MipsTruncIntFP patterns below).
+  let AdditionalPredicates = [NotInMicroMips, NotR5900] in {
+    def ROUND_W_S : MMRel, StdMMR6Rel,
+                    ABSS_FT<"round.w.s", FGR32Opnd, FGR32Opnd, II_ROUND>,
+                    ABSS_FM<0xc, 16>, ISA_MIPS2;
+    def TRUNC_W_S : MMRel, StdMMR6Rel,
+                    ABSS_FT<"trunc.w.s", FGR32Opnd, FGR32Opnd, II_TRUNC>,
+                    ABSS_FM<0xd, 16>, ISA_MIPS2;
+    def CEIL_W_S  : MMRel, StdMMR6Rel,
+                    ABSS_FT<"ceil.w.s", FGR32Opnd, FGR32Opnd, II_CEIL>,
+                    ABSS_FM<0xe, 16>, ISA_MIPS2;
+    def FLOOR_W_S : MMRel, StdMMR6Rel,
+                    ABSS_FT<"floor.w.s", FGR32Opnd, FGR32Opnd, II_FLOOR>,
+                    ABSS_FM<0xf, 16>, ISA_MIPS2;
+  }
   defm ROUND_W  : ROUND_M<"round.w.d", II_ROUND>, ABSS_FM<0xc, 17>, ISA_MIPS2;
-  def TRUNC_W_S : MMRel, StdMMR6Rel,
-                  ABSS_FT<"trunc.w.s", FGR32Opnd, FGR32Opnd, II_TRUNC>,
-                  ABSS_FM<0xd, 16>, ISA_MIPS2;
-  def CEIL_W_S  : MMRel, StdMMR6Rel,
-                  ABSS_FT<"ceil.w.s", FGR32Opnd, FGR32Opnd, II_CEIL>,
-                  ABSS_FM<0xe, 16>, ISA_MIPS2;
-  def FLOOR_W_S : MMRel, StdMMR6Rel,
-                  ABSS_FT<"floor.w.s", FGR32Opnd, FGR32Opnd, II_FLOOR>,
-                  ABSS_FM<0xf, 16>, ISA_MIPS2;
 
   defm TRUNC_W : ROUND_M<"trunc.w.d", II_TRUNC>, ABSS_FM<0xd, 17>, ISA_MIPS2;
   defm CEIL_W  : ROUND_M<"ceil.w.d", II_CEIL>, ABSS_FM<0xe, 17>, ISA_MIPS2;
@@ -959,8 +963,15 @@ def : MipsPat<(f32 fpimm0neg), (FNEG_S (MTC1 ZERO))>, ISA_MIPS1;
 
 def : MipsPat<(f32 (any_sint_to_fp GPR32Opnd:$src)),
               (PseudoCVT_S_W GPR32Opnd:$src)>;
+let AdditionalPredicates = [NotR5900] in
 def : MipsPat<(MipsTruncIntFP FGR32Opnd:$src),
               (TRUNC_W_S FGR32Opnd:$src)>, ISA_MIPS1;
+// The R5900 has no TRUNC.W.S; its CVT.W.S always rounds toward zero, which is
+// what fp_to_sint needs (the assembler of the ps2sdk quietly makes the same
+// substitution).
+let AdditionalPredicates = [HasR5900] in
+def : MipsPat<(MipsTruncIntFP FGR32Opnd:$src),
+              (CVT_W_S FGR32Opnd:$src)>, ISA_MIPS1;
 
 def : MipsPat<(MipsMTC1_D64 GPR32Opnd:$src),
               (MTC1_D64 GPR32Opnd:$src)>, ISA_MIPS1, FGR_64;

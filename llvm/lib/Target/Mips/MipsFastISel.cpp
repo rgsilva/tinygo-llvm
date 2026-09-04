@@ -1133,6 +1133,8 @@ bool MipsFastISel::selectFPToInt(const Instruction *I, bool IsSigned) {
   Register DestReg = createResultReg(&Mips::GPR32RegClass);
   Register TempReg = createResultReg(&Mips::FGR32RegClass);
   unsigned Opc = (SrcVT == MVT::f32) ? Mips::TRUNC_W_S : Mips::TRUNC_W_D32;
+  if (Subtarget->hasR5900() && SrcVT == MVT::f32)
+    Opc = Mips::CVT_W_S; // no TRUNC.W.S on the R5900; CVT.W.S truncates
 
   // Generate the convert.
   emitInst(Opc, TempReg).addReg(SrcReg);

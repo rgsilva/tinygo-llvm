@@ -2,6 +2,7 @@
 ; Of MIPS-IV it only has the GPR conditional moves MOVN/MOVZ.
 ; RUN: llc -mtriple=mips64el-unknown-unknown -mcpu=r5900 -target-abi n32 < %s | FileCheck %s
 ; RUN: llc -mtriple=mips64el-unknown-unknown -mcpu=mips3 -target-abi n32 < %s | FileCheck %s --check-prefix=MIPS3
+; RUN: llc -mtriple=mips64el-unknown-unknown -mcpu=r5900 -mattr=+single-float -target-abi n32 < %s | FileCheck %s --check-prefix=SF
 
 define i64 @mul64(i64 %a, i64 %b) {
 ; CHECK-LABEL: mul64:
@@ -141,4 +142,33 @@ define i1 @fcmp_uno(float %a, float %b) {
 ; MIPS3: c.un.s
   %r = fcmp uno float %a, %b
   ret i1 %r
+}
+
+; The R5900's FPU has no TRUNC/ROUND/CEIL/FLOOR: CVT.W.S rounds toward zero.
+define i32 @f2i(float %f) {
+; CHECK-LABEL: f2i:
+; CHECK: cvt.w.s
+; CHECK-NOT: trunc.w.s
+; MIPS3-LABEL: f2i:
+; MIPS3: trunc.w.s
+  %r = fptosi float %f to i32
+  ret i32 %r
+}
+
+define i32 @f2u(float %f) {
+; CHECK-LABEL: f2u:
+; CHECK: cvt.w.s
+; CHECK-NOT: trunc.w.s
+  %r = fptoui float %f to i32
+  ret i32 %r
+}
+
+; With the single-precision FPU the PS2 target uses, i64 conversions must not
+; use the 64-bit or the truncating conversions either.
+define i64 @f2l(float %f) {
+; SF-LABEL: f2l:
+; SF-NOT: trunc.w.s
+; SF-NOT: trunc.l.s
+  %r = fptosi float %f to i64
+  ret i64 %r
 }
